@@ -1,0 +1,27 @@
+pkgname=device-sony-xperia-e-dual
+pkgver=3.4
+pkgrel=1
+pkgdesc="Sony Xperia E Dual"
+url="https://github.com/postmarketOS"
+arch="noarch"
+license="MIT"
+depends="linux-sony-nanhu mkbootimg"
+makedepends=""
+install=""
+subpackages=""
+source="deviceinfo 90-android.rules"
+options="!check"
+
+build() {
+	return 0
+}
+
+package() {
+	install -D -m644 "$srcdir/deviceinfo" \
+		"$pkgdir/etc/deviceinfo"
+	install -D -m644 "$srcdir"/90-android.rules \
+		"$pkgdir"/etc/udev/rules.d/90-android.rules
+}
+
+sha512sums="a97196ad99f325beb3db296821c25bcbb173bff723b2bd8b0eb57d771eaca08d3f4a04e629fdff49c1906862f14a12cf34981575bda6aefff655dbf51e2857d2  deviceinfo
+d1c9feee9ca5f667a7f4e99654b9535ec41bde4684c3c7c5eeef530c95958af8b198d4f7c0adbf1a58e8072ad95beeb6c644d2aed5047c5b0c3f5fc7287bfe7b  90-android.rules"

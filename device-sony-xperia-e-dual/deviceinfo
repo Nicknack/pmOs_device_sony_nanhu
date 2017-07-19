@@ -1,0 +1,45 @@
+# Reference: <https://postmarketos.org/deviceinfo>
+# Please use double quotes only. You can source this file in shell scripts.
+
+deviceinfo_format_version="0"
+deviceinfo_name="Sony Xperia E Dual"
+deviceinfo_manufacturer="Sony"
+deviceinfo_date=""
+deviceinfo_keyboard="false"
+deviceinfo_nonfree="????"
+deviceinfo_dtb=""
+deviceinfo_modules_initfs=""
+deviceinfo_external_disk="true"
+deviceinfo_external_disk_install="true"
+deviceinfo_flash_methods="fastboot"
+deviceinfo_arch="armhf"
+
+# Fastboot related
+deviceinfo_generate_bootimg="true"
+
+#amani
+#deviceinfo_flash_offset_kernel="00008000"
+#deviceinfo_flash_offset_ramdisk="02000000"
+#deviceinfo_flash_offset_second="00f00000"
+#deviceinfo_flash_offset_tags="01e00000"
+#deviceinfo_flash_pagesize="2048"
+
+#mkbootimg
+#deviceinfo_flash_offset_kernel="00008000"
+#deviceinfo_flash_offset_ramdisk="004109a8"
+#deviceinfo_flash_offset_second="0080437e"
+#deviceinfo_flash_offset_tags="00007000"
+#deviceinfo_flash_pagesize="4096"
+
+#my dump
+deviceinfo_flash_offset_kernel="00001000"
+deviceinfo_flash_offset_ramdisk="00409828"
+deviceinfo_flash_offset_second="00590bd9"
+deviceinfo_flash_offset_tags="00000000"
+deviceinfo_flash_pagesize="4096"
+
+#noz
+#deviceinfo_flash_offset_ramdisk="004099a8"
+#deviceinfo_flash_offset_second="007fd37e"
+#deviceinfo_flash_offset_tags="00000000"
+#deviceinfo_flash_pagesize="4096"

@@ -1,0 +1,114 @@
+# APKBUILD based on linux-vanilla aport. Changes:
+# - disabled module installation
+# - add !check !tracedeps
+# - package: just install zImage-dtb and kernel.release, because the kernel config
+#	does not generate modules or dtb files
+# - do not create -dev subpackage (makes no sense without module support)
+#
+# Kernel config changes, based on: arch/arm/configs/aosp_rhine_amami_defconfig
+# - enable devtmpfs (needed for udev -> touch support in weston)
+# - change compression from CONFIG_KERNEL_LZMA=y to
+#	CONFIG_KERNEL_GZIP=y (so it works with busybox)
+# - disable proprietary graphics driver
+
+_vendor=sony
+_flavor=sony-nanhu
+_hash="7d3ad365fdc2436eb14bb61bdc3417f9dfadedc7"
+_config="config-${_flavor}.armhf"
+
+pkgname=linux-${_flavor}
+pkgver=3.4
+case $pkgver in
+	*.*.*)  _kernver=${pkgver%.*};;
+	*.*) _kernver=$pkgver;;
+esac
+pkgrel=1
+arch="armhf"
+pkgdesc="android_kernel_sony_msm7x27a"
+url="https://github.com/Klozz/android_kernel_sony_msm7x27a-nanhu"
+depends="postmarketos-mkinitfs"
+makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev"
+options="!strip !check !tracedeps"
+install=
+source="
+	$pkgname-$_hash.tar.gz::https://github.com/Klozz/android_kernel_sony_msm7x27a-nanhu/archive/${_hash}.tar.gz
+	$_config
+	reduce_lzo_compression.patch
+	return_adress.patch
+	timeconst_perl_warning.patch
+	compiler-gcc6.h
+"
+subpackages=""
+license="GPL2"
+
+_abi_release=${pkgver}
+_carch="arm"
+HOSTCC="${CC:-gcc}"
+HOSTCC="${HOSTCC#${CROSS_COMPILE}}"
+
+ksrcdir="$srcdir/android_kernel_sony_msm7x27a-nanhu-${_hash}"
+
+prepare() {
+	local _patch_failed=
+	cd "$ksrcdir"
+
+	# first apply patches in specified order
+	for i in $source; do
+		case $i in
+		*.patch)
+			msg "Applying $i..."
+			if ! patch -s -p1 -N -i "$srcdir"/$i; then
+				echo $i >>failed
+				_patch_failed=1
+			fi
+			;;
+		esac
+	done
+
+	if ! [ -z "$_patch_failed" ]; then
+		error "The following patches failed:"
+		cat failed
+		return 1
+	fi
+
+	# gcc6 support
+	cp -v "$srcdir/compiler-gcc6.h" "$ksrcdir/include/linux/" || return 1
+
+	mkdir -p "$srcdir"/build
+	cp "$srcdir"/$_config "$srcdir"/build/.config || return 1
+	make -C "$ksrcdir" O="$srcdir"/build ARCH="$_carch" HOSTCC="$HOSTCC" \
+		silentoldconfig
+}
+
+
+
+# this is so we can do: 'abuild menuconfig' to reconfigure kernel
+menuconfig() {
+	cd "$srcdir"/build || return 1
+	make ARCH="$_carch" menuconfig
+	cp .config "$startdir"/$_config
+}
+
+build() {
+	cd "$srcdir"/build
+	unset LDFLAGS
+
+	make ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-Alpine" \
+		|| return 1
+}
+
+package() {
+	install -Dm644 "$srcdir/build/arch/arm/boot/zImage" \
+		"$pkgdir/boot/vmlinuz-$_flavor"
+
+	install -D "$srcdir/build/include/config/kernel.release" \
+		"$pkgdir/usr/share/kernel/$_flavor/kernel.release"
+}
+
+sha512sums="f0457539debaa3b5a8d1f7b2e6c5fe588d83fba3d9c2864a9f4c037cb18a42163dd1c4487587e865d25586ef80615ba1558035b8baff5089b36fcc590b9b03aa  linux-sony-nanhu-7d3ad365fdc2436eb14bb61bdc3417f9dfadedc7.tar.gz
+a590110cd80a30310e998bb291d7334a9928c775f2109736156ac2d69c356742a06e31efafd8d18fdf8a38eb7b43a0992d1a537542239d0d209e619bb2ca173b  config-sony-nanhu.armhf
+3d4fa1e50770cfc408e7dbb47f29af001b298cb01430056eedce43fbd884d91d6aa8c638e64c611419bdd7cb3ecc0175f3084518742d845e4906773f18c2c289  reduce_lzo_compression.patch
+ea1d3b5a234fa565e3c1a792de48f4fc4e6023d281d303c8e319c7ef28edc5739ab0e4dea0139a41f0a5c7d03e27921ccaa214fd0ac5c72245a094ce60128864  return_adress.patch
+232e79be9c83549759edc24ecf32333b964267cdc8e5bc82bc9b4d4ebded78a5f39e41c2da75297a53772458b862a3b899f296bed6a7dd579b4d936f3ee2f5f1  timeconst_perl_warning.patch
+d80980e9474c82ba0ef1a6903b434d8bd1b092c40367ba543e72d2c119301c8b2d05265740e4104ca1ac5d15f6c4aa49e8776cb44264a9a28dc551e0d1850dcc  compiler-gcc6.h"
